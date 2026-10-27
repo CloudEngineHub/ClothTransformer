@@ -1,0 +1,21 @@
+# Per-trajectory overrides of the ccd_postprocess parameters in default.yaml.
+# Keys are <category>/<sim_id>; unspecified fields fall back to the defaults;
+# `enabled: false` turns the post-processing off for one trajectory.
+
+# Example 1
+sims_garment_anim_all/sim_00005:
+  max_iter: 2
+  thickness: 0.0005
+  collider_side: outward
+  collider_ee: false
+
+# Example 2
+sims_grasp_all_case1/sim_00524:
+  enabled: false
+
+# Example 3
+sims_collision_all_static_1k/sim_00524:
+  max_iter: 2
+  thickness: 0.004
+  collider_side: outward
+  failsafe_iter: 3

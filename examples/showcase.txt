@@ -1,0 +1,5 @@
+# Example test trajectories, one per scenario (<category>/<sim_id>).
+# Use with: python main.py infer.ckpt=... infer.file_list=examples/showcase.txt
+sims_garment_anim_all/sim_00005
+sims_grasp_all_case1/sim_00524
+sims_collision_all_static_1k/sim_00524

@@ -1,0 +1,123 @@
+# ClothTransformer default configuration.
+# Any field can be overridden from the command line with OmegaConf dot-notation:
+#   python main.py training.batch_size=2 infer.ckpt=checkpoints/ct-no-ccd-preview.pt
+
+data:
+  dir: data/ClothTransformer-dataset   # dataset root (one sub-directory per scenario)
+  split_file: splits/ct_split.json     # fixed train/val/test split; "" = random 8:1:1 split per scenario
+  val_ratio: 0.1                       # only used when split_file is ""
+  test_ratio: 0.1
+  dt: 0.016666666666666666             # simulation time step (1/60 s)
+  velocity_scale: 1.0e-3         # velocities fed to the model are (dx / dt) * velocity_scale
+  num_workers: 4
+
+model:
+  name: clothtransformer
+  embed_dim: 768
+  num_layers: 12                 # temporal Transformer layers
+  num_heads: 12
+  ffn_dim: 3072
+  dropout: 0.0
+  frame_pe: learnable            # temporal position encoding: learnable | sincos | none
+  block_size: 1                  # frames per block (history length = prediction length)
+  num_latents: 1024              # latent tokens per frame
+  spatial_gnn_layers: 2
+  spatial_self_attn_layers: 0    # self-attention layers on the latent set after compression
+
+training:
+  n_train_steps: 200000
+  batch_size: 1                  # per GPU
+  lr: 1.0e-4
+  min_lr: 1.0e-7                 # end of the cosine schedule
+  use_scheduler: true
+  weight_decay: 0.0
+  grad_clip: 1.0
+  seed: 42
+  init_ckpt: ""                  # initialize weights from a checkpoint
+  noise_std: 0.0                 # Gaussian noise added to the input history
+  pred_vel_noise_std: 0.0        # Gaussian noise added to velocities derived from predictions
+  log_every: 100
+  val_every: 1000
+  val_max_batches: 200           # validation batches per process (evenly spaced windows); null = all
+  save_every: 20000
+
+  augmentation:                  # random Y rotation + XZ translation
+    enabled: false
+    translate_range: 0.5
+
+  scheduled_sampling:            # probability of feeding ground truth instead of predictions
+    enabled: false
+    start_prob: 1.0
+    end_prob: 0.1
+
+  rollout_curriculum:            # number of autoregressive steps per training sample
+    enabled: true
+    start_len: 1
+    end_len: 5
+    ramp_up_steps: 180000
+
+loss:
+  contact:                       # cubic penalty on cloth vertices penetrating the collider
+    enabled: true
+    thresh: 0.001
+    weight_start: 100.0
+    weight_max: 10000.0
+    rampup_start: 30000
+    rampup_steps: 120000
+    knn: 1
+    max_dist: 0.05
+    depth_cap: 0.01
+
+  ccd:                           # differentiable CCD self-collision loss
+    enabled: false
+    weight: 100.0
+    self_vf: true
+    self_ee: true
+    safe_margin: 0.001
+    broad_phase_margin: 0.01
+    max_pairs: 100000
+
+  self_contact:                  # discrete cloth-cloth proximity penalty
+    enabled: false
+    weight: 1.0
+    thresh: 0.002
+    knn: 5
+
+infer:
+  ckpt: ""                       # checkpoint to roll out; non-empty switches main.py to inference
+  sim: ""                        # a single trajectory <category>/<sim_id>; overrides file_list/split/category
+  file_list: ""                  # text file of <category>/<sim_id> lines; overrides split/category
+  split: test                    # train | val | test | train_val | all
+  category: ""                   # restrict to one scenario directory; "" = all
+  max_samples: null              # cap on the number of trajectories; null = all
+  infer_step_size: null          # frames kept per prediction; null = block_size
+  out_dir: outputs/rollouts      # <out_dir>/<category>/<sim_id>/{pred,gt,collision}/frame_XXXX.obj
+
+ccd_postprocess:                 # inference-time CCD post-processing (ct/ccd/postprocess.py)
+  enabled: false
+  case_config: configs/ccd_config_per_scene.yaml  # per-trajectory overrides, keyed by <category>/<sim_id>
+  max_iter: 5                    # resolve iterations per frame
+  thickness: 0.002               # cloth-collider distance enforced after a contact
+  self_time_margin: 0.2          # self contacts: step back this fraction of the time step
+  relaxation: 1.0                # scale of the cloth-collider correction
+  collider_side: start           # keep cloth on its previous-frame side (start) or outside the collider normals (outward)
+  max_depth: 0.01                # proximity test only within this depth below the collider surface
+  broad_margin: 0.005            # candidate search margin
+  feedback: true                 # feed corrected frames back to the model as history
+  failsafe_iter: 0               # >0: finally roll back remaining crossings (partial passes, then to the previous frame)
+  failsafe_margin: 0.1           # rollback target: time of impact minus this fraction of the step
+  compile: true                  # torch.compile the CCD tests (falls back to eager mode)
+  collider_vf: true              # cloth vertex vs collider triangle
+  collider_tv: true              # collider vertex vs cloth triangle
+  collider_ee: true              # cloth edge vs collider edge
+  self_vf: false                 # cloth vertex vs cloth triangle (self contact)
+  self_ee: false                 # cloth edge vs cloth edge (self contact)
+  n_samples: 8                   # CCD root search: cubic samples per step ...
+  n_bisect: 6                    # ... and bisection steps per sign change
+  verbose: false
+
+runtime:
+  dtype: float32                 # autocast dtype: float32 | bfloat16 | float16
+  output_dir: outputs            # training runs go to <output_dir>/<run_name>/
+  run_name: ""                   # default: <timestamp>
+  dry_run: false                 # write no files (no TensorBoard, checkpoints or .obj)

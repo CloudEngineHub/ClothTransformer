@@ -1,0 +1,46 @@
+cff-version: 1.2.0
+message: "If you use this code or dataset, please cite the paper below."
+title: "ClothTransformer: Unified Latent-Space Transformers for Scalable Cloth Simulation"
+repository-code: "https://github.com/YuCrazing/ClothTransformer"
+url: "https://yucrazing.github.io/clothtransformer/"
+license: MIT
+authors:
+  - family-names: Zhang
+    given-names: Yu
+  - family-names: Shao
+    given-names: Yidi
+  - family-names: Ouyang
+    given-names: Wenqi
+  - family-names: Lan
+    given-names: Yushi
+  - family-names: Liang
+    given-names: Zhexin
+  - family-names: Wu
+    given-names: Chengrui
+  - family-names: Xu
+    given-names: Xudong
+  - family-names: Pan
+    given-names: Xingang
+preferred-citation:
+  type: conference-paper
+  title: "ClothTransformer: Unified Latent-Space Transformers for Scalable Cloth Simulation"
+  collection-title: "Advances in Neural Information Processing Systems (NeurIPS)"
+  year: 2026
+  url: "https://arxiv.org/abs/2605.27852"
+  authors:
+    - family-names: Zhang
+      given-names: Yu
+    - family-names: Shao
+      given-names: Yidi
+    - family-names: Ouyang
+      given-names: Wenqi
+    - family-names: Lan
+      given-names: Yushi
+    - family-names: Liang
+      given-names: Zhexin
+    - family-names: Wu
+      given-names: Chengrui
+    - family-names: Xu
+      given-names: Xudong
+    - family-names: Pan
+      given-names: Xingang

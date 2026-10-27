@@ -1,0 +1,7 @@
+# PyTorch >= 2.1 (tested with 2.4.0 + CUDA 12.1); install the build matching your CUDA from https://pytorch.org
+torch>=2.1
+numpy
+einops
+omegaconf
+tensorboard
+huggingface_hub
